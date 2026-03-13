@@ -52,6 +52,9 @@
   .path-trail{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:1.25rem}
   .trail-chip{font-size:10px;padding:2px 8px;background:var(--bg2);border-radius:20px;color:var(--t3)}
   .trail-chip:not(:last-child)::after{content:' →';margin-left:2px}
+  .groundedly-badge{text-align:center;padding:1.5rem 1rem 0.5rem;font-size:11px;color:var(--t3)}
+  .groundedly-badge a{color:var(--purple);text-decoration:none;font-weight:500}
+  .groundedly-badge a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -62,6 +65,7 @@
   <div class="progress" id="progress"></div>
   <div class="question-area" id="question-area"></div>
 </div>
+<div class="groundedly-badge">Grounded in <a href="https://groundedly.vercel.app" target="_blank" rel="noopener">Groundedly</a></div>
 
 <script>
 const TREE = {
