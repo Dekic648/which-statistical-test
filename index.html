@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Which Statistical Test?</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#fff;--bg2:#f5f4f0;--bg3:#eeecea;--t1:#1a1a18;--t2:#5f5e5a;--t3:#888780;--b1:rgba(0,0,0,0.12);--b2:rgba(0,0,0,0.22);--purple:#7F77DD;--purple-d:#534AB7;--purple-l:#EEEDFE;--teal:#1D9E75;--teal-l:#E1F5EE;--red:#E24B4A;--red-l:#FCEBEB;--amber:#BA7517;--amber-l:#FAEEDA;--rm:8px;--rl:12px}
+  @media(prefers-color-scheme:dark){:root{--bg:#1c1c1a;--bg2:#252523;--bg3:#2e2e2b;--t1:#f0ede8;--t2:#b4b2a9;--t3:#888780;--b1:rgba(255,255,255,0.1);--b2:rgba(255,255,255,0.2);--purple:#9F99E8;--purple-d:#AFA9EC;--purple-l:#26215C;--teal:#5DCAA5;--teal-l:#04342C;--red:#F09595;--red-l:#501313;--amber:#EF9F27;--amber-l:#412402}}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--t1);min-height:100vh;padding:2rem 1rem}
+  .page{max-width:760px;margin:0 auto;background:var(--bg);border-radius:var(--rl);border:0.5px solid var(--b1);padding:2rem 2.5rem}
+  h1{font-size:20px;font-weight:500;margin-bottom:4px}
+  .sub{font-size:13px;color:var(--t2);margin-bottom:2rem}
+  .sl{font-size:10px;font-weight:500;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+  .progress{display:flex;gap:6px;margin-bottom:2rem;flex-wrap:wrap}
+  .prog-step{height:4px;border-radius:2px;background:var(--bg2);flex:1;min-width:20px;transition:background .3s}
+  .prog-step.done{background:var(--purple)}
+  .prog-step.active{background:var(--purple);opacity:0.5}
+  .question-area{min-height:220px}
+  .q-number{font-size:11px;color:var(--t3);margin-bottom:6px}
+  .q-text{font-size:17px;font-weight:500;color:var(--t1);margin-bottom:1.25rem;line-height:1.5}
+  .options{display:flex;flex-direction:column;gap:8px}
+  .opt{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:0.5px solid var(--b2);border-radius:var(--rl);cursor:pointer;transition:all .15s;background:var(--bg)}
+  .opt:hover{border-color:var(--purple);background:var(--purple-l)}
+  .opt-icon{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--b2);flex-shrink:0;margin-top:1px;transition:all .15s}
+  .opt:hover .opt-icon{border-color:var(--purple);background:var(--purple)}
+  .opt-label{font-size:14px;font-weight:500;color:var(--t1)}
+  .opt-desc{font-size:12px;color:var(--t2);margin-top:2px;line-height:1.5}
+  .back-btn{font-size:12px;padding:5px 10px;border:0.5px solid var(--b2);border-radius:var(--rm);background:transparent;color:var(--t3);cursor:pointer;margin-bottom:1rem}
+  .back-btn:hover{color:var(--t1);background:var(--bg2)}
+  .result-card{background:var(--purple-l);border:0.5px solid var(--purple);border-radius:var(--rl);padding:1.5rem;margin-bottom:1.25rem}
+  .result-test{font-size:22px;font-weight:500;color:var(--purple-d);margin-bottom:6px}
+  .result-why{font-size:13px;color:var(--t1);line-height:1.7;margin-bottom:1rem}
+  .not-this{background:var(--bg2);border-radius:var(--rl);padding:12px 14px;margin-bottom:1.25rem}
+  .not-this-label{font-size:11px;color:var(--t3);margin-bottom:8px}
+  .not-item{font-size:12px;color:var(--t2);line-height:1.6;padding:4px 0;border-bottom:0.5px solid var(--b1)}
+  .not-item:last-child{border-bottom:none}
+  .not-item strong{color:var(--t1);font-weight:500}
+  .restart-btn{padding:8px 16px;border:0.5px solid var(--b2);border-radius:var(--rm);background:transparent;color:var(--t2);font-size:13px;cursor:pointer}
+  .restart-btn:hover{background:var(--bg2);color:var(--t1)}
+  .assumptions{background:var(--amber-l);border-radius:var(--rm);padding:10px 12px;font-size:12px;color:var(--amber);line-height:1.6;margin-bottom:1rem}
+  .assumptions strong{font-weight:500}
+  .path-trail{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:1.25rem}
+  .trail-chip{font-size:10px;padding:2px 8px;background:var(--bg2);border-radius:20px;color:var(--t3)}
+  .trail-chip:not(:last-child)::after{content:' →';margin-left:2px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Which statistical test should I use?</h1>
+  <p class="sub">Answer three questions. Get the right test, why it was chosen, and what to avoid.</p>
+
+  <div class="progress" id="progress"></div>
+  <div class="question-area" id="question-area"></div>
+</div>
+
+<script>
+const TREE = {
+  id:'root',
+  q:'What type of outcome variable are you working with?',
+  opts:[
+    {label:'Binary / pass-fail',desc:'Completion rates, yes/no outcomes, clicked / didn\'t click',next:'binary'},
+    {label:'Continuous / numeric',desc:'Task times, scores, counts, ratings',next:'continuous'},
+    {label:'Ordinal / rating scale',desc:'Likert scales, NPS, SUS items',next:'ordinal'},
+  ]
+};
+
+const NODES = {
+  binary:{q:'What is your research goal?',opts:[
+    {label:'Estimate a completion rate',desc:'Build a confidence interval around a single rate',next:'binary_est'},
+    {label:'Compare to a benchmark',desc:'Test whether your rate meets a known target (e.g. 80%)',next:'binary_bench'},
+    {label:'Compare two designs',desc:'Is Design A\'s rate different from Design B\'s?',next:'binary_compare'},
+  ]},
+  binary_est:{result:{
+    test:'Adjusted-Wald CI',
+    why:'For estimating a single completion rate, the Adjusted-Wald method outperforms standard Wald at all sample sizes common in UX research. It adds 2 pseudo-successes and 2 pseudo-failures before computing, producing intervals that are more accurate and always stay within [0,1]. For 0% or 100% outcomes, use the LaPlace formula instead.',
+    notThis:[
+      {name:'Standard Wald',reason:'Produces intervals that are too narrow and can go below 0% or above 100% at small n. Widely used but consistently outperformed.'},
+      {name:'Exact (Clopper-Pearson)',reason:'More conservative than needed for most UX work. Use only if you specifically need a guaranteed coverage probability.'},
+    ],
+    assumptions:'Sample assumed to be independent observations. If the same users completed multiple tasks, treat each task separately.'
+  }},
+  binary_bench:{result:{
+    test:'Exact binomial test (mid-p)',
+    why:'When testing whether a completion rate meets a benchmark, the method depends on sample size. Check first: do you have at least 15 successes AND 15 failures? If yes, a normal approximation works. If no (common in UX), use the exact binomial with mid-p correction. Mid-p is less conservative than the standard exact test and recommended by Sauro & Lewis.',
+    notThis:[
+      {name:'Chi-square test',reason:'Not appropriate for single-sample proportion tests against a fixed benchmark. Chi-square is for comparing groups.'},
+      {name:'Standard exact binomial (without mid-p)',reason:'More conservative than necessary. The mid-p variant maintains good Type I error control with better power.'},
+    ],
+    assumptions:'The benchmark must be set before data collection. Testing against a post-hoc benchmark inflates false positive rate.'
+  }},
+  binary_compare:{q:'Did the same participants test both designs?',opts:[
+    {label:'Yes — within-subjects',desc:'Same users on Design A and Design B',next:'binary_within'},
+    {label:'No — between-subjects',desc:'Different groups for each design',next:'binary_between'},
+  ]},
+  binary_within:{result:{
+    test:'McNemar test (mid-p)',
+    why:'For within-subjects completion rate comparisons, McNemar is the correct test — it uses only the "discordant pairs" (users who passed one design but failed the other). The mid-p correction recommended by Sauro & Lewis reduces conservatism while maintaining appropriate Type I error control. Include a confidence interval around the difference using the Wilson score method.',
+    notThis:[
+      {name:'Chi-square test',reason:'Ignores the paired nature of the data. Using chi-square here discards the within-subjects correlation and reduces power.'},
+      {name:'Two independent proportions test',reason:'Same problem — treats paired data as independent, losing statistical power and giving incorrect results.'},
+    ],
+    assumptions:'Requires at least a few discordant pairs (cells b and c in the 2×2 table) to have meaningful power. If all users pass both or fail both, no comparison is possible.'
+  }},
+  binary_between:{result:{
+    test:'N−1 two-proportion test',
+    why:'For independent-groups completion rate comparison, the N−1 chi-square (also called the N−1 two-proportion z-test) outperforms both standard chi-square and Fisher\'s Exact at sample sizes common in UX research. Fisher Exact is only preferred when expected cell counts are below 1. If unsure, run both and note if they agree.',
+    notThis:[
+      {name:'Standard Pearson chi-square',reason:'Slightly liberal (too many false positives) at small n. N−1 correction addresses this.'},
+      {name:'Fisher Exact (by default)',reason:'Fisher is overly conservative when cells are not very small. Reserve it for cases with expected cell count < 1.'},
+    ],
+    assumptions:'Independent observations between groups. No participant appears in both Design A and Design B groups.'
+  }},
+  continuous:{q:'What is your research goal?',opts:[
+    {label:'Estimate a mean or typical value',desc:'What is the typical task time or score?',next:'cont_est'},
+    {label:'Compare two groups or conditions',desc:'Is Group A different from Group B?',next:'cont_compare'},
+    {label:'Compare before vs. after',desc:'Same participants, measured twice',next:'cont_paired'},
+  ]},
+  cont_est:{result:{
+    test:'t-distribution CI (log-transformed for times)',
+    why:'For continuous metrics, use the t-distribution confidence interval (not the normal distribution) — it accounts for uncertainty in the standard deviation at small n. For task times specifically, always log-transform first, compute the CI on the log scale, then back-transform to get a CI for the geometric mean. Reporting the arithmetic mean for task times is a common error.',
+    notThis:[
+      {name:'Z-interval (normal CI)',reason:'Assumes known population standard deviation. In practice you have a sample SD, so the t-distribution is always more appropriate.'},
+      {name:'Arithmetic mean for task times',reason:'Task times are right-skewed. The arithmetic mean is inflated by outliers. Log-transform and report the geometric mean.'},
+    ],
+    assumptions:'For t-CI: approximately normal distribution OR n ≥ 30. For log-transformed times: log-normality of the raw data (usually safe to assume).'
+  }},
+  cont_compare:{result:{
+    test:'Independent samples t-test',
+    why:'For comparing two independent groups on a continuous metric, the independent t-test is appropriate. At small n, it is robust to mild non-normality. For task times, log-transform before testing. For 3+ groups, use one-way ANOVA instead. Consider reporting effect size (Cohen\'s d) alongside p-value.',
+    notThis:[
+      {name:'Mann-Whitney U (by default)',reason:'Not wrong, but not always more powerful despite the perception. Use it when distributions are heavily skewed or ordinal — not as a default substitute for t-test.'},
+      {name:'Z-test',reason:'Requires known population variance. Almost never applicable in UX research.'},
+    ],
+    assumptions:'Independence between groups. Approximately normal distributions or n ≥ 20 per group. Equal or unequal variances — use Welch\'s t-test (unequal variances version) by default.'
+  }},
+  cont_paired:{result:{
+    test:'Paired t-test',
+    why:'When the same participants are measured twice (before/after, Design A vs B), the paired t-test is more powerful than the independent t-test because it removes between-person variability. Compute the difference score per participant and run a one-sample t-test on those differences. For times, log-transform before computing differences.',
+    notThis:[
+      {name:'Independent samples t-test on paired data',reason:'Ignores the correlation between measurements. Loses statistical power and produces wider, less accurate confidence intervals.'},
+      {name:'Wilcoxon signed-rank (by default)',reason:'Use only when the difference scores are non-normal and n is small. Paired t-test is generally preferred when normality is reasonable.'},
+    ],
+    assumptions:'Differences are approximately normally distributed (can be violated at n ≥ 30). Observations within each pair must be independent of other pairs.'
+  }},
+  ordinal:{result:{
+    test:'Treat as continuous (with flagging)',
+    why:'For rating scales and Likert items, Sauro & Lewis recommend treating ordinal data as continuous for most UX research purposes — compute means, run t-tests, report confidence intervals. This is acceptable practice backed by simulation studies showing robust results. The key constraint: never interpret the ratio of two ordinal scores ("twice as satisfied") as meaningful. Flag that comparison explicitly.',
+    notThis:[
+      {name:'Always using non-parametric tests',reason:'Mann-Whitney U and Kruskal-Wallis are valid but less powerful and harder to interpret. Parametric tests are robust to mild non-normality and produce more actionable CIs.'},
+      {name:'Ratio interpretations',reason:'A jump from 3→6 on a 7-point scale does not mean "twice as satisfied." Interval-level interpretation is acceptable; ratio-level is not.'},
+    ],
+    assumptions:'Scale must have 5+ response options. Underlying construct should be continuous in nature. Do not average across items measuring different constructs.'
+  }},
+};
+
+let path = [];
+let currentNode = 'root';
+
+function getNode(id){
+  if(id==='root') return TREE;
+  return NODES[id];
+}
+
+function render(){
+  const node = getNode(currentNode);
+  const totalSteps = 4;
+  const progHTML = Array.from({length:totalSteps},(_,i)=>{
+    const cl = i<path.length ? 'done' : i===path.length ? 'active' : '';
+    return `<div class="prog-step ${cl}"></div>`;
+  }).join('');
+  document.getElementById('progress').innerHTML = progHTML;
+
+  if(node.result){
+    renderResult(node.result);
+    return;
+  }
+
+  let html = '';
+  if(path.length>0){
+    html += `<button class="back-btn" onclick="goBack()">← back</button>`;
+    const trail = path.map(p=>{
+      const n = getNode(p.from);
+      const opt = n.opts?.find(o=>o.next===p.to);
+      return opt ? `<span class="trail-chip">${opt.label}</span>` : '';
+    }).join('');
+    if(trail) html += `<div class="path-trail">${trail}</div>`;
+  }
+
+  html += `<div class="q-number">Question ${path.length+1}</div>`;
+  html += `<div class="q-text">${node.q}</div>`;
+  html += `<div class="options">`;
+  node.opts.forEach(opt=>{
+    html += `<div class="opt" onclick="choose('${opt.next}','${currentNode}')">
+      <div class="opt-icon"></div>
+      <div><div class="opt-label">${opt.label}</div><div class="opt-desc">${opt.desc}</div></div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  document.getElementById('question-area').innerHTML = html;
+}
+
+function choose(next, from){
+  path.push({from, to: next});
+  currentNode = next;
+  render();
+}
+
+function goBack(){
+  if(path.length===0) return;
+  path.pop();
+  currentNode = path.length>0 ? path[path.length-1].to : 'root';
+  render();
+}
+
+function renderResult(r){
+  const trail = path.map(p=>{
+    const n = getNode(p.from);
+    const opt = n.opts?.find(o=>o.next===p.to);
+    return opt ? `<span class="trail-chip">${opt.label}</span>` : '';
+  }).join('');
+
+  let html = `<button class="back-btn" onclick="goBack()">← back</button>`;
+  if(trail) html += `<div class="path-trail">${trail}</div>`;
+
+  html += `<div class="result-card">
+    <div class="result-test">${r.test}</div>
+    <div class="result-why">${r.why}</div>
+  </div>`;
+
+  if(r.assumptions){
+    html += `<div class="assumptions"><strong>Check assumptions:</strong> ${r.assumptions}</div>`;
+  }
+
+  html += `<div class="not-this"><div class="not-this-label">What NOT to use — and why</div>`;
+  r.notThis.forEach(item=>{
+    html += `<div class="not-item"><strong>${item.name}</strong> — ${item.reason}</div>`;
+  });
+  html += `</div>`;
+
+  html += `<button class="restart-btn" onclick="restart()">Start over</button>`;
+
+  document.getElementById('question-area').innerHTML = html;
+  document.getElementById('progress').innerHTML = Array.from({length:4},()=>`<div class="prog-step done"></div>`).join('');
+}
+
+function restart(){
+  path = [];
+  currentNode = 'root';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
