@@ -95,7 +95,7 @@ const NODES = {
   }},
   binary_bench:{result:{
     test:'Exact binomial test (mid-p)',
-    why:'When testing whether a completion rate meets a benchmark, the method depends on sample size. Check first: do you have at least 15 successes AND 15 failures? If yes, a normal approximation works. If no (common in UX), use the exact binomial with mid-p correction. Mid-p is less conservative than the standard exact test and recommended by Sauro & Lewis.',
+    why:'When testing whether a completion rate meets a benchmark, the method depends on sample size. Check first: do you have at least 15 successes AND 15 failures? If yes, a normal approximation works. If no (common in UX), use the exact binomial with mid-p correction. Mid-p is less conservative than the standard exact test and generally recommended for UX research.',
     notThis:[
       {name:'Chi-square test',reason:'Not appropriate for single-sample proportion tests against a fixed benchmark. Chi-square is for comparing groups.'},
       {name:'Standard exact binomial (without mid-p)',reason:'More conservative than necessary. The mid-p variant maintains good Type I error control with better power.'},
@@ -108,7 +108,7 @@ const NODES = {
   ]},
   binary_within:{result:{
     test:'McNemar test (mid-p)',
-    why:'For within-subjects completion rate comparisons, McNemar is the correct test — it uses only the "discordant pairs" (users who passed one design but failed the other). The mid-p correction recommended by Sauro & Lewis reduces conservatism while maintaining appropriate Type I error control. Include a confidence interval around the difference using the Wilson score method.',
+    why:'For within-subjects completion rate comparisons, McNemar is the correct test — it uses only the "discordant pairs" (users who passed one design but failed the other). The mid-p correction reduces conservatism while maintaining appropriate Type I error control. Include a confidence interval around the difference using the Wilson score method.',
     notThis:[
       {name:'Chi-square test',reason:'Ignores the paired nature of the data. Using chi-square here discards the within-subjects correlation and reduces power.'},
       {name:'Two independent proportions test',reason:'Same problem — treats paired data as independent, losing statistical power and giving incorrect results.'},
@@ -158,7 +158,7 @@ const NODES = {
   }},
   ordinal:{result:{
     test:'Treat as continuous (with flagging)',
-    why:'For rating scales and Likert items, Sauro & Lewis recommend treating ordinal data as continuous for most UX research purposes — compute means, run t-tests, report confidence intervals. This is acceptable practice backed by simulation studies showing robust results. The key constraint: never interpret the ratio of two ordinal scores ("twice as satisfied") as meaningful. Flag that comparison explicitly.',
+    why:'For rating scales and Likert items, Current best practice supports treating ordinal data as continuous for most UX research purposes — compute means, run t-tests, report confidence intervals. This is acceptable practice backed by simulation studies showing robust results. The key constraint: never interpret the ratio of two ordinal scores ("twice as satisfied") as meaningful. Flag that comparison explicitly.',
     notThis:[
       {name:'Always using non-parametric tests',reason:'Mann-Whitney U and Kruskal-Wallis are valid but less powerful and harder to interpret. Parametric tests are robust to mild non-normality and produce more actionable CIs.'},
       {name:'Ratio interpretations',reason:'A jump from 3→6 on a 7-point scale does not mean "twice as satisfied." Interval-level interpretation is acceptable; ratio-level is not.'},
